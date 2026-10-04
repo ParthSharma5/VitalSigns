@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { getAdminOverview } from '../lib/admin';
 import { runAlertCheck } from '../lib/alerts';
 import { closeDb, sql } from '../lib/db';
 import { insertEvents } from '../lib/events';
@@ -113,5 +114,17 @@ describe('dashboard queries and alerts', () => {
     expect(again.created).toEqual([]);
     const [{ count }] = await sql<{ count: number }>('SELECT count(*)::int AS count FROM alerts WHERE site_id = $1', [siteId]);
     expect(count).toBe(1);
+  });
+});
+
+describe('admin overview', () => {
+  it('summarises users, sites and data across all accounts', async () => {
+    const { totals, users, sites } = await getAdminOverview();
+    expect(totals.users).toBe(1);
+    expect(totals.sites).toBe(1);
+    expect(totals.events).toBe(90);
+    expect(users[0]).toMatchObject({ email: 't@t.dev', sites: 1 });
+    expect(sites[0]).toMatchObject({ domain: 'test.dev', owner: 't@t.dev', events: 90, alerts: 1 });
+    expect(sites[0].last_event).not.toBeNull();
   });
 });
