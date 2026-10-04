@@ -1,0 +1,37 @@
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+import { sql } from './db';
+
+export type Site = {
+  id: string;
+  name: string;
+  domain: string;
+  public_key: string;
+  alert_threshold: number;
+  webhook_url: string | null;
+  alert_email: boolean;
+};
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Ownership is part of the query, so another user's site id is a 404.
+export const getSiteForUser = cache(async (siteId: string, userId: string): Promise<Site> => {
+  if (!UUID_RE.test(siteId)) notFound();
+  const [site] = await sql<Site>(
+    `SELECT id, name, domain, public_key, alert_threshold, webhook_url, alert_email
+     FROM sites WHERE id = $1 AND user_id = $2`,
+    [siteId, userId],
+  );
+  if (!site) notFound();
+  return site;
+});
+
+export async function listSites(userId: string) {
+  return sql<Site & { views_7d: number }>(
+    `SELECT s.id, s.name, s.domain, s.public_key, s.alert_threshold, s.webhook_url, s.alert_email,
+       (SELECT count(DISTINCT view_id)::int FROM events e
+         WHERE e.site_id = s.id AND e.created_at > now() - interval '7 days') AS views_7d
+     FROM sites s WHERE s.user_id = $1 ORDER BY s.created_at`,
+    [userId],
+  );
+}
