@@ -83,6 +83,7 @@ export function countryFromHeaders(headers: Headers): string | null {
     headers.get('x-vercel-ip-country') ??
     headers.get('cf-ipcountry') ??
     headers.get('cloudfront-viewer-country') ??
+    headers.get('x-country') ??
     headers.get('x-country-code');
   if (!raw || !/^[A-Za-z]{2}$/.test(raw) || raw.toUpperCase() === 'XX') return null;
   return raw.toUpperCase();

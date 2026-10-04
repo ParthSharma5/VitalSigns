@@ -109,7 +109,9 @@ The suggestions are deterministic and rule-based. An AI-generated version is **o
 2. Set `APP_URL`, `CRON_SECRET`, and optionally `RESEND_API_KEY` / `ALERT_FROM_EMAIL` (see `.env.example`).
 3. Deploy. On Vercel, `vercel.json` schedules `/api/cron/alerts` once a day, the most the free Hobby plan allows. For hourly checks, add `APP_URL` and `CRON_SECRET` as GitHub repository secrets and `.github/workflows/alerts-cron.yml` calls it every hour. Elsewhere, call it hourly with `Authorization: Bearer $CRON_SECRET`.
 
-Production should use the CDN's country header: `x-vercel-ip-country`, `cf-ipcountry` and CloudFront's are read automatically. Without one, country shows as Unknown.
+On Netlify, import the repo with the default Next.js settings, set the same environment variables, and use the GitHub Actions workflow for the alert check (Netlify ignores `vercel.json`).
+
+Production should use the CDN's country header: Vercel's `x-vercel-ip-country`, Netlify's `x-country`, `cf-ipcountry` and CloudFront's are read automatically. Without one, country shows as Unknown.
 
 ## Project layout
 

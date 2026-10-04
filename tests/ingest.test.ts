@@ -92,6 +92,7 @@ describe('user agent handling', () => {
 describe('countryFromHeaders', () => {
   it('reads common CDN headers and ignores junk', () => {
     expect(countryFromHeaders(new Headers({ 'x-vercel-ip-country': 'de' }))).toBe('DE');
+    expect(countryFromHeaders(new Headers({ 'x-country': 'IN' }))).toBe('IN');
     expect(countryFromHeaders(new Headers({ 'cf-ipcountry': 'XX' }))).toBeNull();
     expect(countryFromHeaders(new Headers({ 'cf-ipcountry': 'T1X' }))).toBeNull();
     expect(countryFromHeaders(new Headers())).toBeNull();
