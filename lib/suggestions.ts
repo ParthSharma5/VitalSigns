@@ -6,12 +6,9 @@ export type Suggestion = {
   severity: 'poor' | 'needs-improvement';
   title: string;
   detail: string;
-  evidence: string; // the data that triggered this suggestion
+  evidence: string;
 };
 
-// Anything that turns page diagnostics into fixes implements this. The
-// built-in provider is deterministic rules over the attribution data the
-// snippet collects; an AI-backed provider can implement the same interface.
 export interface SuggestionProvider {
   readonly name: string;
   suggest(page: PageDiagnostics): Promise<Suggestion[]>;
@@ -31,7 +28,6 @@ function severityOf(metric: MetricName, value: number | null): Suggestion['sever
 export function ruleBasedSuggestions(page: PageDiagnostics): Suggestion[] {
   const out: Suggestion[] = [];
 
-  // --- LCP -----------------------------------------------------------------
   const lcpSeverity = severityOf('LCP', page.p75.LCP);
   const ttfb = page.p75.TTFB;
   if (lcpSeverity) {
@@ -99,7 +95,6 @@ export function ruleBasedSuggestions(page: PageDiagnostics): Suggestion[] {
     }
   }
 
-  // --- INP -----------------------------------------------------------------
   const inpSeverity = severityOf('INP', page.p75.INP);
   if (inpSeverity) {
     const culprit = page.culprits.INP;
@@ -116,7 +111,6 @@ export function ruleBasedSuggestions(page: PageDiagnostics): Suggestion[] {
     });
   }
 
-  // --- CLS -----------------------------------------------------------------
   const clsSeverity = severityOf('CLS', page.p75.CLS);
   if (clsSeverity) {
     const culprit = page.culprits.CLS;
@@ -141,7 +135,6 @@ export const ruleBasedProvider: SuggestionProvider = {
   suggest: async (page) => ruleBasedSuggestions(page),
 };
 
-// Single place to swap in a different provider later.
 export function getSuggestionProvider(): SuggestionProvider {
   return ruleBasedProvider;
 }

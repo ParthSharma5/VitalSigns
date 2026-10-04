@@ -1,10 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { SCHEMA } from './schema';
 
-// A deliberately tiny database seam: parameterised SQL in, rows out.
-// Local development uses PGlite (Postgres compiled to WASM, persisted to
-// .data/pglite) so there is nothing to install; set DATABASE_URL to use a real
-// Postgres such as Neon or Supabase in production.
 export interface Db {
   query<T = Record<string, unknown>>(text: string, params?: unknown[]): Promise<T[]>;
   exec(text: string): Promise<void>;
@@ -33,8 +29,6 @@ async function connect(): Promise<Db> {
   };
 }
 
-// Cached on globalThis so dev-mode hot reloads reuse one connection (PGlite
-// in particular must only be opened once per data directory).
 const g = globalThis as unknown as { __vitalsignsDb?: Promise<Db> };
 
 export function getDb(): Promise<Db> {

@@ -3,7 +3,6 @@ import { promisify } from 'node:util';
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
-// Passwords: scrypt from node:crypto, stored as "scrypt$<salt>$<hash>".
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
   const hash = await scrypt(password, salt, 64);

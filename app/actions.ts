@@ -16,7 +16,6 @@ const credentials = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters.').max(200),
 });
 
-// Only allow same-site relative redirects after login.
 const safeNext = (next: FormDataEntryValue | null) =>
   typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
 
@@ -41,7 +40,6 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
     'SELECT id, password_hash FROM users WHERE email = $1',
     [parsed.data.email],
   );
-  // Same message either way so the form doesn't reveal which emails exist.
   if (!user || !(await verifyPassword(parsed.data.password, user.password_hash))) {
     return { error: 'Incorrect email or password.' };
   }

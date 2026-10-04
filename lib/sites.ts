@@ -14,7 +14,6 @@ export type Site = {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Ownership is part of the query, so another user's site id is a 404.
 export const getSiteForUser = cache(async (siteId: string, userId: string): Promise<Site> => {
   if (!UUID_RE.test(siteId)) notFound();
   const [site] = await sql<Site>(

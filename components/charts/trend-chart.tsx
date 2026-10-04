@@ -28,9 +28,6 @@ function useWidth<T extends HTMLElement>() {
   return [ref, width] as const;
 }
 
-// Single-series p75 line with the metric's "good" (and, when in range, "poor")
-// boundaries drawn as reference lines. One metric per chart: their units differ,
-// so they never share an axis.
 export function TrendChart({ metric, points, hourly }: { metric: MetricName; points: Point[]; hourly: boolean }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [active, setActive] = useState<number | null>(null);
@@ -48,7 +45,6 @@ export function TrendChart({ metric, points, hourly }: { metric: MetricName; poi
     const ticks: number[] = [];
     for (let v = 0; v <= yMax + step / 2; v += step) ticks.push(v);
 
-    // Break the line where a bucket has no data instead of bridging the gap.
     const segments: string[] = [];
     let current = '';
     points.forEach((p, i) => {

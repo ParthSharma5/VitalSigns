@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { METRIC_INFO, isMetric, type MetricName } from './metrics';
 
-// Wire format sent by snippet/core.ts. Short keys keep the beacon small.
 const beaconSchema = z.object({
   s: z.string().min(1).max(64),
   p: z.string().max(2048),
@@ -13,7 +12,7 @@ const beaconSchema = z.object({
       z.object({
         n: z.string(),
         i: z.string().min(1).max(64),
-        x: z.number(), // zod 4 rejects Infinity/NaN by default
+        x: z.number(),
         t: z.string().max(80).optional(),
         u: z.string().max(200).optional(),
         e: z.string().max(32).optional(),
@@ -68,8 +67,6 @@ export function classifyDevice(ua: string): Device {
   return 'desktop';
 }
 
-// Normalise paths so /blog/post?utm=x and /blog/post/ group together, and
-// collapse long numeric/hex IDs so /orders/8812 and /orders/8813 are one page.
 export function normalizePath(raw: string): string {
   let path = raw.split(/[?#]/)[0] || '/';
   if (!path.startsWith('/')) path = '/' + path;
@@ -91,8 +88,6 @@ export function countryFromHeaders(headers: Headers): string | null {
   return raw.toUpperCase();
 }
 
-// Turn a validated beacon into rows. Unknown metrics and implausible values are
-// dropped rather than rejecting the whole beacon.
 export function toRows(beacon: Beacon, ctx: { device: Device; country: string | null }): EventRow[] {
   const path = normalizePath(beacon.p);
   const rows: EventRow[] = [];
@@ -117,10 +112,8 @@ export function toRows(beacon: Beacon, ctx: { device: Device; country: string | 
   return rows;
 }
 
-// Origin check: the site key is public, so this only stops casual misuse
-// (someone copying your tag onto their site), not a determined attacker.
 export function originAllowed(origin: string | null, domain: string): boolean {
-  if (!origin) return true; // sendBeacon from some browsers omits Origin
+  if (!origin) return true;
   let host: string;
   try {
     host = new URL(origin).hostname.toLowerCase();

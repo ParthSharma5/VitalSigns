@@ -51,7 +51,6 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
     return `/dashboard/${site.id}?${q}`;
   };
 
-  // Suggestions for the five slowest pages that actually have something to fix.
   const provider = getSuggestionProvider();
   const diagnostics = await getDiagnostics(filter, pages.slice(0, 8));
   const suggestions = (
@@ -62,7 +61,6 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
 
   return (
     <div className="space-y-6">
-      {/* Filters: one row, above everything they scope. */}
       <div className="flex flex-wrap items-center gap-2">
         <FilterGroup
           label="Time range"
@@ -231,7 +229,6 @@ function FilterGroup({ label, options }: { label: string; options: Array<{ href:
 function StatTile({ s, trend, range }: { s: MetricSummary; trend: Array<number | null>; range: RangeKey }) {
   const info = METRIC_INFO[s.metric];
   const change = s.p75 != null && s.prevP75 ? (s.p75 - s.prevP75) / s.prevP75 : null;
-  // Every metric here is lower-is-better, so "up" is bad.
   const deltaClass = change == null || Math.abs(change) < 0.02 ? 'text-muted' : change > 0 ? 'text-poor-ink' : 'text-good-ink';
   return (
     <section className="rounded-xl border border-line bg-surface p-5">

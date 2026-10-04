@@ -3,11 +3,11 @@ import { CORE_METRICS, METRIC_INFO, formatValue, rate, type MetricName } from '.
 
 export type WindowStats = {
   metric: MetricName;
-  baseline: number | null; // p75 over the previous 24h
-  current: number | null; // p75 over the last 24h
+  baseline: number | null;
+  current: number | null;
   baselineN: number;
   currentN: number;
-  baselineRelease: string | null; // most common release in each window
+  baselineRelease: string | null;
   currentRelease: string | null;
 };
 
@@ -16,15 +16,11 @@ export type Regression = {
   baseline: number;
   current: number;
   change: number;
-  release: string | null; // set when the regression lines up with a new release
+  release: string | null;
 };
 
 export const MIN_SAMPLES = 30;
 
-// Pure decision function: which metrics got meaningfully worse?
-// A regression needs (1) enough samples on both sides that p75 is stable,
-// (2) a relative change past the site's threshold, and (3) an absolute change
-// big enough to matter, so tiny numbers don't produce scary percentages.
 export function detectRegressions(stats: WindowStats[], threshold: number, minSamples = MIN_SAMPLES): Regression[] {
   const out: Regression[] = [];
   for (const s of stats) {
@@ -86,9 +82,6 @@ type SiteForAlerts = {
   alert_email: boolean; email: string;
 };
 
-// Checks every site (or one), records new regressions, and notifies.
-// Alerts are unique per (site, metric, day): running this hourly is safe and
-// only the first detection of the day sends a notification.
 export async function runAlertCheck(opts: { siteId?: string; now?: Date } = {}) {
   const now = opts.now ?? new Date();
   const sites = await sql<SiteForAlerts>(
@@ -121,7 +114,6 @@ async function notify(site: SiteForAlerts, message: string) {
   const dashboard = `${process.env.APP_URL ?? 'http://localhost:3000'}/dashboard/${site.id}`;
   const tasks: Promise<unknown>[] = [];
 
-  // Slack, Discord (with /slack suffix) and most chat tools accept {text}.
   if (site.webhook_url) {
     tasks.push(
       fetch(site.webhook_url, {
@@ -138,8 +130,6 @@ async function notify(site: SiteForAlerts, message: string) {
         method: 'POST',
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Resend's shared test sender works without owning a domain, but only
-          // delivers to the address that owns the Resend account.
           from: process.env.ALERT_FROM_EMAIL ?? 'VitalSigns <onboarding@resend.dev>',
           to: site.email,
           subject: `[VitalSigns] ${message.split(':')[0]}`,

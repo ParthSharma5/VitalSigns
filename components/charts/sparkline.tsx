@@ -1,4 +1,3 @@
-// Tiny trend for stat tiles: de-emphasised line, latest point in the accent.
 export function Sparkline({ values, width = 96, height = 28 }: { values: Array<number | null>; width?: number; height?: number }) {
   const present = values.map((v, i) => [i, v] as const).filter((p): p is readonly [number, number] => p[1] != null);
   if (present.length < 2) return null;

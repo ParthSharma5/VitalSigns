@@ -17,8 +17,6 @@ function windowOf(f: Filter) {
 const deviceClause = (param: string) => `(${param}::text IS NULL OR device = ${param})`;
 const deviceParam = (f: Filter) => (f.device === 'all' ? null : f.device);
 
-// SQL CASE that is true when a row's value is worse than "good" for its metric.
-// Built from constants in metrics.ts, never from user input.
 const NOT_GOOD = `CASE metric ${METRICS.map((m) => `WHEN '${m}' THEN value > ${METRIC_INFO[m].good}`).join(' ')} END`;
 const POOR = `CASE metric ${METRICS.map((m) => `WHEN '${m}' THEN value > ${METRIC_INFO[m].poor}`).join(' ')} END`;
 
@@ -87,7 +85,6 @@ export async function getTrends(f: Filter): Promise<Record<MetricName, TrendPoin
     [f.siteId, start, now, deviceParam(f)],
   );
 
-  // Fill every bucket so gaps show as gaps rather than being interpolated over.
   const step = unit === 'hour' ? 3_600_000 : 86_400_000;
   const first = Math.floor(start.getTime() / step) * step + step;
   const buckets: number[] = [];
@@ -138,8 +135,6 @@ export async function getBreakdown(f: Filter, dim: 'device' | 'country', limit =
   return rows.map((r) => ({ key: r.key, views: r.views, LCP: r.lcp, INP: r.inp, CLS: r.cls, TTFB: r.ttfb }));
 }
 
-// What is behind the bad experiences on a page: the most common element /
-// resource / interaction among samples that missed the "good" threshold.
 export type Culprit = { target: string | null; resource: string | null; eventType: string | null; share: number };
 export type PageDiagnostics = {
   path: string;

@@ -3,8 +3,6 @@ import { RatingBadge } from '@/components/ui';
 
 const FILL: Record<Rating, string> = { good: 'bg-good', 'needs-improvement': 'bg-warn', poor: 'bg-poor' };
 
-// Share of visits rated good / needs work / poor. Segments are separated by a
-// 2px surface gap; values live in the legend, so nothing depends on hover.
 export function DistributionBar({ good, needsImprovement, poor }: { good: number; needsImprovement: number; poor: number }) {
   const total = good + needsImprovement + poor;
   if (total === 0) return <p className="text-xs text-muted">No samples yet.</p>;

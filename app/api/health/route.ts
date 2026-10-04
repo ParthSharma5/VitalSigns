@@ -1,8 +1,6 @@
 import { sql } from '@/lib/db';
 import { getWriter } from '@/lib/events';
 
-// Liveness plus ingest counters for this instance (accepted / written /
-// failed / shed rows and batch count since the process started).
 export async function GET() {
   try {
     await sql('SELECT 1');

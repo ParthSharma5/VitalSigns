@@ -1,6 +1,3 @@
-// Builds the browser snippet into public/ and enforces size budgets:
-//   public/v1.js               loader, the script tag users paste (<= 2KB gzip)
-//   public/v1-core.<hash>.js   collector, web-vitals + batching    (<= 5KB gzip)
 import { build } from 'esbuild';
 import { readFileSync, readdirSync, rmSync } from 'node:fs';
 import { basename } from 'node:path';

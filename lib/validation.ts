@@ -1,6 +1,5 @@
 import { isIP } from 'node:net';
 
-// "https://www.Example.com/pricing" -> "example.com"
 export function normalizeDomain(input: string): string | null {
   const raw = input.trim().toLowerCase();
   if (!raw) return null;
@@ -12,9 +11,6 @@ export function normalizeDomain(input: string): string | null {
   }
 }
 
-// Webhooks are fetched from our server, so refuse URLs that point at internal
-// infrastructure. (Hostnames that resolve to private IPs are not caught here;
-// a production deployment should also egress through a filtering proxy.)
 export function webhookAllowed(url: URL): boolean {
   if (url.protocol !== 'https:') return false;
   const host = url.hostname.replace(/^\[|\]$/g, '');

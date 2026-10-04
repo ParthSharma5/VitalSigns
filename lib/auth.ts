@@ -9,8 +9,6 @@ export { SESSION_COOKIE };
 export { hashPassword, verifyPassword } from './password';
 const SESSION_DAYS = 30;
 
-// Sessions: a random token lives in an httpOnly cookie; only its SHA-256 is
-// stored, so a leaked sessions table can't be replayed as cookies.
 const tokenId = (token: string) => createHash('sha256').update(token).digest('hex');
 
 export async function createSession(userId: string) {
@@ -35,7 +33,6 @@ export async function destroySession() {
 
 export type User = { id: string; email: string };
 
-// Memoised per request, so layouts and pages can both ask without extra queries.
 export const getUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;

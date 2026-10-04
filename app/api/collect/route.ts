@@ -2,9 +2,6 @@ import { after } from 'next/server';
 import { getWriter, lookupSite } from '@/lib/events';
 import { classifyDevice, countryFromHeaders, isBot, originAllowed, parseBeacon, toRows } from '@/lib/ingest';
 
-// Beacons arrive as text/plain (a CORS "simple" request, so no preflight), and
-// browsers ignore the response. Status codes still matter for the fetch()
-// fallback, for monitoring, and for anyone debugging their install.
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 const reply = (status: number) => new Response(null, { status, headers: CORS });
 
@@ -24,10 +21,8 @@ export async function POST(request: Request) {
   );
 
   const written = getWriter().enqueue(rows);
-  if (!written) return reply(503); // shedding load: the writer queue is full
+  if (!written) return reply(503);
 
-  // Answer immediately; after() keeps the function alive until the batch
-  // containing these rows has committed (or failed and been logged).
   after(() => written.catch((err) => console.error('[collect] batch write failed', err)));
   return reply(202);
 }

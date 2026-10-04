@@ -27,7 +27,6 @@ describe('detectRegressions', () => {
     expect(detectRegressions([stats({ current: 2300 })], 0.2)).toEqual([]);
     expect(detectRegressions([stats({ current: 4000, currentN: 10 })], 0.2)).toEqual([]);
     expect(detectRegressions([stats({ baseline: null })], 0.2)).toEqual([]);
-    // CLS 0.01 -> 0.02 is +100% but only 0.01 absolute: noise, not a regression.
     expect(detectRegressions([stats({ metric: 'CLS', baseline: 0.01, current: 0.02 })], 0.2)).toEqual([]);
     expect(detectRegressions([stats({ metric: 'CLS', baseline: 0.05, current: 0.12 })], 0.2)).toHaveLength(1);
   });

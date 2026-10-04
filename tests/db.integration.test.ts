@@ -1,5 +1,3 @@
-// Runs the real SQL (schema, batched upserts, dashboard queries, alert check)
-// against an in-memory PGlite. See vitest.config.ts.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runAlertCheck } from '../lib/alerts';
 import { closeDb, sql } from '../lib/db';
@@ -47,8 +45,6 @@ describe('insertEvents', () => {
 
 describe('dashboard queries and alerts', () => {
   beforeAll(async () => {
-    // Yesterday: 40 fast home-page loads on v1. Today: 40 slow ones on v2,
-    // with the slow loads all caused by one hero image on mobile.
     const yesterday = Array.from({ length: 40 }, (_, i) =>
       event({ metricId: `y${i}`, viewId: `yv${i}`, value: 1800 + i * 10, release: 'v1' }),
     );

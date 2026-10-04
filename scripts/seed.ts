@@ -1,13 +1,3 @@
-// Seeds a demo account with 30 days of realistic synthetic traffic.
-//
-//   npm run seed        (stop `npm run dev` first: PGlite allows one process)
-//
-// Login: demo@vitalsigns.dev / demo-password. Site key: vs_demo
-//
-// The data has deliberate problems for the dashboard to find: an unoptimised
-// product image, a slow checkout button, a shifting ad banner, a slow search
-// backend, and a release 20 hours ago that shipped a heavy render-blocking
-// bundle and made LCP worse on every page.
 import { runAlertCheck } from '../lib/alerts';
 import { closeDb, sql } from '../lib/db';
 import { normalizePath } from '../lib/ingest';
@@ -17,7 +7,6 @@ const DAYS = 30;
 const VIEWS_PER_DAY = 420;
 const RELEASE_AT_HOURS_AGO = 20;
 
-// Deterministic PRNG so every seed produces the same dashboard.
 let state = 42;
 const rand = () => {
   state |= 0;
@@ -95,13 +84,11 @@ async function main() {
 
   let views = 0;
   for (let day = DAYS; day > 0; day--) {
-    // Gentle growth over the month and a quieter weekend.
     const dayStart = now - day * 86_400_000;
     const weekday = new Date(dayStart).getUTCDay();
     const count = Math.round(VIEWS_PER_DAY * (0.75 + 0.25 * (1 - day / DAYS)) * (weekday === 0 || weekday === 6 ? 0.7 : 1));
 
     for (let v = 0; v < count; v++) {
-      // Diurnal curve: more traffic in the (UTC) afternoon.
       let offset: number;
       do offset = rand() * 86_400_000;
       while (rand() > 0.45 + 0.55 * Math.sin((offset / 86_400_000) * Math.PI));
@@ -115,7 +102,6 @@ async function main() {
       const viewId = `seed${views.toString(36)}`;
       const path = normalizePath(page.path());
 
-      // v1.5.0 added a large render-blocking bundle: every page paints later.
       const regression = released ? 1.45 : 1;
       const ttfb = lognormal(page.ttfb * geo.latency, 0.45);
       const lcp = Math.max(ttfb + 150, lognormal(page.lcp * dev.net * geo.latency * regression, 0.35));

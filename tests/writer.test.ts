@@ -49,11 +49,11 @@ describe('EventWriter', () => {
     const writer = new EventWriter({ write: () => gate, maxQueued: 3, maxDelayMs: 1 });
     const first = writer.enqueue([row('a'), row('b')]);
     expect(first).not.toBeNull();
-    expect(writer.enqueue([row('c'), row('d')])).toBeNull(); // would exceed 3
+    expect(writer.enqueue([row('c'), row('d')])).toBeNull();
     expect(writer.stats.shed).toBe(2);
     release();
     await first;
-    expect(writer.enqueue([row('e')])).not.toBeNull(); // room again once written
+    expect(writer.enqueue([row('e')])).not.toBeNull();
   });
 });
 

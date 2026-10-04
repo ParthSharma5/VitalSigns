@@ -46,7 +46,6 @@ const RATING_STYLE: Record<Rating, { dot: string; icon: string }> = {
   poor: { dot: 'bg-poor', icon: '✕' },
 };
 
-// Status colour never carries meaning alone: always icon + label beside it.
 export function RatingBadge({ rating, compact = false }: { rating: Rating; compact?: boolean }) {
   const s = RATING_STYLE[rating];
   return (
@@ -62,7 +61,6 @@ export function RatingBadge({ rating, compact = false }: { rating: Rating; compa
   );
 }
 
-// A metric value with its rating icon, for tables.
 export function MetricCell({ metric, value }: { metric: MetricName; value: number | null }) {
   if (value == null) return <span className="text-muted">–</span>;
   return (

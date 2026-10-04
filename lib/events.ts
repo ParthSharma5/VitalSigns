@@ -1,9 +1,6 @@
 import { sql } from './db';
 import { EventWriter, type SiteRow } from './writer';
 
-// One INSERT per batch using unnest(): a fixed 13 parameters no matter how many
-// rows, so the statement shape (and plan) is identical for every batch.
-// Re-sent metrics overwrite the earlier value; a metric only ever grows.
 export async function insertEvents(rows: SiteRow[]) {
   const col = <K extends keyof SiteRow>(k: K) => rows.map((r) => r[k]);
   await sql(
@@ -28,8 +25,6 @@ export function getWriter(): EventWriter {
   return g.__vitalsignsWriter;
 }
 
-// Site lookups happen on every beacon, so cache key -> site briefly in memory.
-// Unknown keys are cached too, so junk traffic can't hammer the database.
 type SiteInfo = { id: string; domain: string } | null;
 const siteCache = new Map<string, { site: SiteInfo; expires: number }>();
 const SITE_TTL_MS = 60_000;
