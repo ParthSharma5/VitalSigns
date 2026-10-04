@@ -107,7 +107,7 @@ The suggestions are deterministic and rule-based. An AI-generated version is **o
 
 1. Create a Postgres database (Neon, Supabase, RDS…) and set `DATABASE_URL`. The schema is applied automatically on first connection.
 2. Set `APP_URL`, `CRON_SECRET`, and optionally `RESEND_API_KEY` / `ALERT_FROM_EMAIL` (see `.env.example`).
-3. Deploy. On Vercel, `vercel.json` schedules `/api/cron/alerts` hourly. Elsewhere, call it hourly with `Authorization: Bearer $CRON_SECRET`.
+3. Deploy. On Vercel, `vercel.json` schedules `/api/cron/alerts` once a day, the most the free Hobby plan allows. For hourly checks, add `APP_URL` and `CRON_SECRET` as GitHub repository secrets and `.github/workflows/alerts-cron.yml` calls it every hour. Elsewhere, call it hourly with `Authorization: Bearer $CRON_SECRET`.
 
 Production should use the CDN's country header: `x-vercel-ip-country`, `cf-ipcountry` and CloudFront's are read automatically. Without one, country shows as Unknown.
 
