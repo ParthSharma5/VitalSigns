@@ -7,6 +7,7 @@ const beaconSchema = z.object({
   v: z.string().min(1).max(32),
   r: z.string().max(64).optional(),
   c: z.string().max(16).optional(),
+  a: z.string().max(64).optional(),
   m: z
     .array(
       z.object({
@@ -37,6 +38,7 @@ export type EventRow = {
   target: string | null;
   resource: string | null;
   eventType: string | null;
+  userId: string | null;
 };
 
 export const MAX_BODY_BYTES = 8 * 1024;
@@ -89,8 +91,15 @@ export function countryFromHeaders(headers: Headers): string | null {
   return raw.toUpperCase();
 }
 
+export function cleanUserId(raw: string | undefined): string | null {
+  const id = raw?.trim();
+  if (!id || id.includes('@') || /^\+?\d[\d\s-]{7,}$/.test(id)) return null;
+  return id;
+}
+
 export function toRows(beacon: Beacon, ctx: { device: Device; country: string | null }): EventRow[] {
   const path = normalizePath(beacon.p);
+  const userId = cleanUserId(beacon.a);
   const rows: EventRow[] = [];
   for (const m of beacon.m) {
     if (!isMetric(m.n)) continue;
@@ -108,6 +117,7 @@ export function toRows(beacon: Beacon, ctx: { device: Device; country: string | 
       target: m.t ?? null,
       resource: m.u ?? null,
       eventType: m.e ?? null,
+      userId,
     });
   }
   return rows;

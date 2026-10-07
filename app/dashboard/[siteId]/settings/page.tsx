@@ -24,7 +24,7 @@ export default async function SettingsPage(props: PageProps<'/dashboard/[siteId]
 
       <Card title="Install" subtitle="Paste into the <head> of every page, or your layout / template.">
         <CopySnippet code={snippet} />
-        <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-3">
+        <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <dt className="font-medium">Optional: data-release</dt>
             <dd className="mt-1 text-ink-2">
@@ -36,6 +36,14 @@ export default async function SettingsPage(props: PageProps<'/dashboard/[siteId]
             <dt className="font-medium">Optional: data-sample</dt>
             <dd className="mt-1 text-ink-2">
               On busy sites, measure a fraction of visits: <code className="font-mono text-xs">data-sample=&quot;0.25&quot;</code>.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-medium">Optional: data-user</dt>
+            <dd className="mt-1 text-ink-2">
+              For logged-in visitors, render their internal user ID into the tag (
+              <code className="font-mono text-xs">data-user=&quot;u_123&quot;</code>) to see which users get the slowest experience.
+              Never an email or phone number: those are dropped automatically. Mention it in your privacy policy.
             </dd>
           </div>
           <div>

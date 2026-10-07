@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS events (
   UNIQUE (site_id, metric_id)
 );
 CREATE INDEX IF NOT EXISTS events_site_metric_time_idx ON events (site_id, metric, created_at);
+ALTER TABLE events ADD COLUMN IF NOT EXISTS user_id text;
+CREATE INDEX IF NOT EXISTS events_site_time_idx ON events (site_id, created_at);
+CREATE INDEX IF NOT EXISTS events_site_view_idx ON events (site_id, view_id);
 
 CREATE TABLE IF NOT EXISTS alerts (
   id          bigserial PRIMARY KEY,

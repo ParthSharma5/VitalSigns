@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getAdminOverview } from '../lib/admin';
+import { getSlowestUsers, getVisit, getVisits } from '../lib/visits';
 import { runAlertCheck } from '../lib/alerts';
 import { closeDb, sql } from '../lib/db';
 import { insertEvents } from '../lib/events';
@@ -13,7 +14,7 @@ let siteId: string;
 function event(o: Partial<SiteRow> & { metricId: string }): SiteRow {
   return {
     siteId, viewId: o.metricId, metric: 'LCP', value: 1000, path: '/', device: 'desktop', country: 'US',
-    connection: '4g', release: 'v1', target: null, resource: null, eventType: null, ...o,
+    connection: '4g', release: 'v1', target: null, resource: null, eventType: null, userId: null, ...o,
   };
 }
 
@@ -126,5 +127,52 @@ describe('admin overview', () => {
     expect(users[0]).toMatchObject({ email: 't@t.dev', sites: 1 });
     expect(sites[0]).toMatchObject({ domain: 'test.dev', owner: 't@t.dev', events: 90, alerts: 1 });
     expect(sites[0].last_event).not.toBeNull();
+  });
+});
+
+describe('visits', () => {
+  const vf = () => ({ siteId, range: '24h' as const, device: 'all' as const, slowOnly: false, user: null, before: null, now: NOW });
+
+  beforeAll(async () => {
+    await insertEvents([
+      event({ metricId: 'vx-lcp', viewId: 'vx', value: 1200, path: '/fast', userId: 'u_1' }),
+      event({ metricId: 'vx-cls', viewId: 'vx', metric: 'CLS', value: 0.02, path: '/fast', userId: 'u_1' }),
+      event({ metricId: 'vy-lcp', viewId: 'vy', value: 5200, path: '/slow', userId: 'u_2', target: 'img.hero', resource: 'https://test.dev/h.png' }),
+      event({ metricId: 'vy-inp', viewId: 'vy', metric: 'INP', value: 600, path: '/slow', userId: 'u_2', target: 'button#go', eventType: 'click' }),
+    ]);
+    await backdate(['vx-lcp', 'vx-cls'], 1);
+    await backdate(['vy-lcp', 'vy-inp'], 0.5);
+  });
+
+  it('lists one row per page view, newest first, with every metric', async () => {
+    const { visits } = await getVisits(vf());
+    expect(visits[0]).toMatchObject({ viewId: 'vy', path: '/slow', userId: 'u_2', LCP: 5200, INP: 600, CLS: null });
+    expect(visits[1]).toMatchObject({ viewId: 'vx', LCP: 1200, CLS: 0.02 });
+  });
+
+  it('filters to slow visits and to one user', async () => {
+    const slow = await getVisits({ ...vf(), slowOnly: true });
+    expect(slow.visits.map((v) => v.viewId)).not.toContain('vx');
+    const one = await getVisits({ ...vf(), user: 'u_1' });
+    expect(one.visits.map((v) => v.viewId)).toEqual(['vx']);
+  });
+
+  it('pages backwards with a cursor', async () => {
+    const page1 = await getVisits(vf(), 1);
+    expect(page1.visits.map((v) => v.viewId)).toEqual(['vy']);
+    const page2 = await getVisits({ ...vf(), before: new Date(page1.nextBefore!) }, 1);
+    expect(page2.visits.map((v) => v.viewId)).toEqual(['vx']);
+  });
+
+  it('returns a single visit with attribution, scoped to the site', async () => {
+    const v = await getVisit(siteId, 'vy');
+    expect(v?.metrics.map((m) => m.metric)).toEqual(['LCP', 'INP']);
+    expect(v?.metrics[1]).toMatchObject({ target: 'button#go', eventType: 'click' });
+    expect(await getVisit('00000000-0000-4000-8000-000000000000', 'vy')).toBeNull();
+  });
+
+  it('ranks users by their slowest experience', async () => {
+    const users = await getSlowestUsers({ siteId, range: '24h', device: 'all', now: NOW });
+    expect(users.map((u) => u.userId)).toEqual(['u_2', 'u_1']);
   });
 });

@@ -5,16 +5,16 @@ export async function insertEvents(rows: SiteRow[]) {
   const col = <K extends keyof SiteRow>(k: K) => rows.map((r) => r[k]);
   await sql(
     `INSERT INTO events
-       (site_id, metric_id, view_id, metric, value, path, device, country, connection, release, target, resource, event_type)
+       (site_id, metric_id, view_id, metric, value, path, device, country, connection, release, target, resource, event_type, user_id)
      SELECT * FROM unnest(
        $1::uuid[], $2::text[], $3::text[], $4::text[], $5::float8[], $6::text[], $7::text[],
-       $8::text[], $9::text[], $10::text[], $11::text[], $12::text[], $13::text[])
+       $8::text[], $9::text[], $10::text[], $11::text[], $12::text[], $13::text[], $14::text[])
      ON CONFLICT (site_id, metric_id) DO UPDATE SET
        value = EXCLUDED.value, target = EXCLUDED.target, resource = EXCLUDED.resource,
-       event_type = EXCLUDED.event_type`,
+       event_type = EXCLUDED.event_type, user_id = EXCLUDED.user_id`,
     [
       col('siteId'), col('metricId'), col('viewId'), col('metric'), col('value'), col('path'), col('device'),
-      col('country'), col('connection'), col('release'), col('target'), col('resource'), col('eventType'),
+      col('country'), col('connection'), col('release'), col('target'), col('resource'), col('eventType'), col('userId'),
     ],
   );
 }

@@ -128,3 +128,24 @@ describe('site settings validation', () => {
     expect(webhookAllowed(new URL('https://[::1]/x'))).toBe(false);
   });
 });
+
+describe('user ids', () => {
+  it('keeps opaque ids and drops anything that looks like an email or phone number', async () => {
+    const { cleanUserId } = await import('../lib/ingest');
+    expect(cleanUserId('u_123')).toBe('u_123');
+    expect(cleanUserId('  42  ')).toBe('42');
+    expect(cleanUserId('a1b2c3d4-e5f6')).toBe('a1b2c3d4-e5f6');
+    expect(cleanUserId('parth@gmail.com')).toBeNull();
+    expect(cleanUserId('+91 98765 43210')).toBeNull();
+    expect(cleanUserId('9876543210')).toBeNull();
+    expect(cleanUserId('')).toBeNull();
+    expect(cleanUserId(undefined)).toBeNull();
+  });
+
+  it('attaches the cleaned id to every row of the beacon', () => {
+    const withId = toRows(parseBeacon(beacon({ a: 'u_7' }))!, { device: 'mobile', country: null });
+    expect(withId.every((r) => r.userId === 'u_7')).toBe(true);
+    const withEmail = toRows(parseBeacon(beacon({ a: 'x@y.com' }))!, { device: 'mobile', country: null });
+    expect(withEmail.every((r) => r.userId === null)).toBe(true);
+  });
+});

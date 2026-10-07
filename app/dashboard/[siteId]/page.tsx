@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CheckAlertsButton } from '@/components/check-alerts-button';
+import { DEVICES, DEVICE_LABEL, FilterGroup, RANGE_LABEL, countryName } from '@/components/filters';
 import { DistributionBar } from '@/components/charts/distribution-bar';
 import { Sparkline } from '@/components/charts/sparkline';
 import { TrendChart } from '@/components/charts/trend-chart';
@@ -15,20 +16,6 @@ import { getSiteForUser } from '@/lib/sites';
 import { getSuggestionProvider } from '@/lib/suggestions';
 
 export const metadata: Metadata = { title: 'Overview' };
-
-const RANGE_LABEL: Record<RangeKey, string> = { '24h': 'Last 24 hours', '7d': 'Last 7 days', '30d': 'Last 30 days' };
-const DEVICES: DeviceFilter[] = ['all', 'mobile', 'desktop', 'tablet'];
-const DEVICE_LABEL: Record<DeviceFilter, string> = { all: 'All devices', mobile: 'Mobile', desktop: 'Desktop', tablet: 'Tablet' };
-
-const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-const countryName = (code: string) => {
-  if (code === '??') return 'Unknown';
-  try {
-    return regionNames.of(code) ?? code;
-  } catch {
-    return code;
-  }
-};
 
 export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]'>) {
   const [{ siteId }, sp, user] = await Promise.all([props.params, props.searchParams, requireUser()]);
@@ -205,24 +192,6 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
         )}
       </Card>
     </div>
-  );
-}
-
-function FilterGroup({ label, options }: { label: string; options: Array<{ href: string; label: string; active: boolean }> }) {
-  return (
-    <nav aria-label={label} className="flex gap-1 rounded-lg border border-line bg-surface p-1 text-sm">
-      {options.map((o) => (
-        <Link
-          key={o.href}
-          href={o.href}
-          scroll={false}
-          aria-current={o.active ? 'true' : undefined}
-          className={`rounded-md px-2.5 py-1 ${o.active ? 'bg-surface-2 font-medium text-ink' : 'text-ink-2 hover:text-ink'}`}
-        >
-          {o.label}
-        </Link>
-      ))}
-    </nav>
   );
 }
 

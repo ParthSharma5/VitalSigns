@@ -3,7 +3,7 @@ import { EventWriter, dedupe, type SiteRow } from '../lib/writer';
 
 const row = (metricId: string, value = 1, siteId = 'site-a'): SiteRow => ({
   siteId, metricId, viewId: 'v', metric: 'LCP', value, path: '/', device: 'desktop', country: null,
-  connection: null, release: null, target: null, resource: null, eventType: null,
+  connection: null, release: null, target: null, resource: null, eventType: null, userId: null,
 });
 
 describe('EventWriter', () => {

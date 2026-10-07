@@ -7,12 +7,13 @@ export function SiteTabs({ siteId }: { siteId: string }) {
   const pathname = usePathname();
   const tabs = [
     { href: `/dashboard/${siteId}`, label: 'Overview' },
+    { href: `/dashboard/${siteId}/visits`, label: 'Visits' },
     { href: `/dashboard/${siteId}/settings`, label: 'Install & settings' },
   ];
   return (
     <nav className="flex gap-1 rounded-lg border border-line bg-surface p-1 text-sm">
       {tabs.map((t) => {
-        const active = pathname === t.href;
+        const active = t.href.endsWith(siteId) ? pathname === t.href : pathname.startsWith(t.href);
         return (
           <Link
             key={t.href}

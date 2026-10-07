@@ -76,7 +76,7 @@ async function main() {
   const releaseAt = now - RELEASE_AT_HOURS_AGO * 3_600_000;
   const cols: Record<string, unknown[]> = {
     metric_id: [], view_id: [], metric: [], value: [], path: [], device: [], country: [], connection: [],
-    release: [], target: [], resource: [], event_type: [], created_at: [],
+    release: [], target: [], resource: [], event_type: [], created_at: [], user_id: [],
   };
   const push = (row: Record<string, unknown>) => {
     for (const k of Object.keys(cols)) cols[k].push(row[k] ?? null);
@@ -108,6 +108,7 @@ async function main() {
       const base = {
         view_id: viewId, path, device: dev.device, country: geo.code, connection: pick(CONNECTIONS),
         release: released ? 'v1.5.0' : 'v1.4.2', created_at: new Date(at),
+        user_id: rand() < 0.35 ? `u_${1001 + Math.floor(rand() * 60)}` : null,
       };
 
       push({ ...base, metric_id: `${viewId}-ttfb`, metric: 'TTFB', value: Math.round(ttfb) });
@@ -137,9 +138,9 @@ async function main() {
     const slice = (k: string) => cols[k].slice(i, i + CHUNK);
     await sql(
       `INSERT INTO events (site_id, metric_id, view_id, metric, value, path, device, country, connection, release,
-         target, resource, event_type, created_at)
+         target, resource, event_type, created_at, user_id)
        SELECT $1::uuid, * FROM unnest($2::text[], $3::text[], $4::text[], $5::float8[], $6::text[], $7::text[], $8::text[],
-         $9::text[], $10::text[], $11::text[], $12::text[], $13::text[], $14::timestamptz[])`,
+         $9::text[], $10::text[], $11::text[], $12::text[], $13::text[], $14::timestamptz[], $15::text[])`,
       [site.id, ...Object.keys(cols).map(slice)],
     );
   }

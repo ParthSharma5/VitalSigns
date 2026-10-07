@@ -6,6 +6,7 @@ type Payload = {
   v: string;
   r?: string;
   c?: string;
+  a?: string;
   m: Array<{ n: string; i: string; x: number; t?: string; u?: string; e?: string }>;
 };
 
@@ -74,6 +75,7 @@ if (script && script.dataset.site && script.dataset.endpoint) {
           p: location.pathname,
           v: view,
           r: script.dataset.release,
+          a: script.dataset.user,
           c: (navigator as Navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType,
           m: [...queue.values()],
         };
