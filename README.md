@@ -106,7 +106,7 @@ The suggestions are deterministic and rule-based. An AI-generated version is **o
 ## Deploying
 
 1. Create a Postgres database (Neon, Supabase, RDS…) and set `DATABASE_URL`. The schema is applied automatically on first connection.
-2. Set `APP_URL`, `CRON_SECRET`, and optionally `RESEND_API_KEY` / `ALERT_FROM_EMAIL` (see `.env.example`).
+2. Set `APP_URL`, `CRON_SECRET`, and optionally `RESEND_API_KEY` / `ALERT_FROM_EMAIL` (see `.env.example`). Set `ADMIN_EMAILS` to your account email to open `/admin`, an overview of every user, site and how much data each is sending. Anyone else gets a 404 there.
 3. Deploy. On Vercel, `vercel.json` schedules `/api/cron/alerts` once a day, the most the free Hobby plan allows. For hourly checks, add `APP_URL` as a GitHub Actions variable and `CRON_SECRET` as a secret and `.github/workflows/alerts-cron.yml` calls it every hour. Elsewhere, call it hourly with `Authorization: Bearer $CRON_SECRET`.
 
 On Netlify, import the repo with the default Next.js settings, set the same environment variables, and use the GitHub Actions workflow for the alert check (Netlify ignores `vercel.json`).
