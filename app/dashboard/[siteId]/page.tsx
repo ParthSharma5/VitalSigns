@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CheckAlertsButton } from '@/components/check-alerts-button';
 import { DEVICES, DEVICE_LABEL, FilterGroup, RANGE_LABEL, countryName } from '@/components/filters';
+import { DeviceTabs } from '@/components/device-tabs';
 import { LocalTime } from '@/components/local-time';
+import { SuggestionList } from '@/components/suggestion-list';
 import { DistributionBar } from '@/components/charts/distribution-bar';
 import { Sparkline } from '@/components/charts/sparkline';
 import { TrendChart } from '@/components/charts/trend-chart';
@@ -17,6 +19,8 @@ import { getSiteForUser } from '@/lib/sites';
 import { getSuggestionProvider } from '@/lib/suggestions';
 
 export const metadata: Metadata = { title: 'Overview' };
+
+const FIX_DEVICES = ['mobile', 'desktop', 'tablet'] as const;
 
 export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]'>) {
   const [{ siteId }, sp, user] = await Promise.all([props.params, props.searchParams, requireUser()]);
@@ -40,12 +44,26 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
   };
 
   const provider = getSuggestionProvider();
-  const diagnostics = await getDiagnostics(filter, pages.slice(0, 8));
-  const suggestions = (
-    await Promise.all(diagnostics.map(async (d) => ({ page: d, items: await provider.suggest(d) })))
-  )
-    .filter((s) => s.items.length > 0)
-    .slice(0, 5);
+  const fixes = await Promise.all(
+    FIX_DEVICES.map(async (d) => {
+      const deviceFilter = { ...filter, device: d };
+      const devicePages = await getPages(deviceFilter, 8);
+      const diagnostics = await getDiagnostics(deviceFilter, devicePages);
+      const suggestions = (
+        await Promise.all(
+          diagnostics.map(async (p) => {
+            const scoped = d === 'mobile' ? p : { ...p, lcpByDevice: {} };
+            return { page: p, items: await provider.suggest(scoped) };
+          }),
+        )
+      )
+        .filter((s) => s.items.length > 0)
+        .slice(0, 5);
+      return { device: d, hasData: devicePages.length > 0, suggestions };
+    }),
+  );
+  const defaultFixTab =
+    device !== 'all' ? device : (fixes.find((f) => f.suggestions.length > 0)?.device ?? 'mobile');
 
   return (
     <div className="space-y-6">
@@ -123,32 +141,26 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
 
           <Card
             title="Suggested fixes"
-            subtitle="Generated from what the snippet measured on each page: the LCP element, slow interactions and layout shifts."
+            subtitle="Generated per device from what the snippet measured: the LCP element, slow interactions and layout shifts."
           >
-            {suggestions.length === 0 ? (
-              <p className="text-sm text-ink-2">Nothing to fix on your busiest pages: every metric is in the good range.</p>
-            ) : (
-              <div className="space-y-6">
-                {suggestions.map(({ page, items }) => (
-                  <div key={page.path}>
-                    <h3 className="font-mono text-xs font-medium text-ink">{page.path}</h3>
-                    <ul className="mt-2 space-y-2">
-                      {items.map((s, i) => (
-                        <li key={i} className="rounded-lg border border-line p-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <RatingBadge rating={s.severity} compact />
-                            <span className="text-xs font-semibold text-muted">{s.metric}</span>
-                            <span className="text-sm font-medium">{s.title}</span>
-                          </div>
-                          <p className="mt-1.5 text-sm text-ink-2">{s.detail}</p>
-                          <p className="mt-1 text-xs text-muted">Based on: {s.evidence}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
+            <DeviceTabs
+              defaultKey={defaultFixTab}
+              tabs={fixes.map((f) => ({
+                key: f.device,
+                label: DEVICE_LABEL[f.device],
+                count: f.suggestions.reduce((n, s) => n + s.items.length, 0),
+                content: (
+                  <SuggestionList
+                    suggestions={f.suggestions}
+                    empty={
+                      f.hasData
+                        ? `Nothing to fix on ${DEVICE_LABEL[f.device].toLowerCase()}: every metric on your busiest pages is in the good range.`
+                        : `No ${DEVICE_LABEL[f.device].toLowerCase()} visits in this period.`
+                    }
+                  />
+                ),
+              }))}
+            />
           </Card>
 
           <div className="grid gap-4 lg:grid-cols-2">
