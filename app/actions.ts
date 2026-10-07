@@ -91,7 +91,9 @@ export async function updateSite(siteId: string, _: FormState, form: FormData): 
   }
 
   const updated = await sql(
-    `UPDATE sites SET name = $3, domain = $4, alert_threshold = $5, webhook_url = $6, alert_email = $7
+    `UPDATE sites SET name = $3, domain = $4, alert_threshold = $5, webhook_url = $6, alert_email = $7,
+       rejected_origin = CASE WHEN domain = $4 THEN rejected_origin END,
+       rejected_at = CASE WHEN domain = $4 THEN rejected_at END
      WHERE id = $1 AND user_id = $2 RETURNING id`,
     [siteId, user.id, name, domain, thresholdPct / 100, webhook, alertEmail],
   );

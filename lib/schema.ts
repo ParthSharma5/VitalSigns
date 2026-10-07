@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS sites (
   created_at      timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS sites_user_idx ON sites (user_id);
+-- Last beacon rejected because its origin didn't match the domain, shown on the install page.
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS rejected_origin text;
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS rejected_at timestamptz;
 
 CREATE TABLE IF NOT EXISTS events (
   id         bigserial PRIMARY KEY,

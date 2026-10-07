@@ -34,3 +34,29 @@ export async function listSites(userId: string) {
     [userId],
   );
 }
+
+export type InstallStatus = {
+  lastEventAt: Date | null;
+  lastPath: string | null;
+  rejectedOrigin: string | null;
+  rejectedAt: Date | null;
+};
+
+// Whether the snippet is reporting yet, for the "waiting for data" / "connected" state.
+export async function getInstallStatus(siteId: string): Promise<InstallStatus> {
+  const [row] = await sql<{ last_event_at: Date | null; last_path: string | null; rejected_origin: string | null; rejected_at: Date | null }>(
+    `SELECT e.created_at AS last_event_at, e.path AS last_path, s.rejected_origin, s.rejected_at
+     FROM sites s
+     LEFT JOIN LATERAL (
+       SELECT created_at, path FROM events WHERE site_id = s.id ORDER BY created_at DESC LIMIT 1
+     ) e ON true
+     WHERE s.id = $1`,
+    [siteId],
+  );
+  return {
+    lastEventAt: row?.last_event_at ?? null,
+    lastPath: row?.last_path ?? null,
+    rejectedOrigin: row?.rejected_origin ?? null,
+    rejectedAt: row?.rejected_at ?? null,
+  };
+}

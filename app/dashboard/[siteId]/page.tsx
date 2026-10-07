@@ -3,19 +3,20 @@ import Link from 'next/link';
 import { CheckAlertsButton } from '@/components/check-alerts-button';
 import { DEVICES, DEVICE_LABEL, FilterGroup, RANGE_LABEL, countryName } from '@/components/filters';
 import { DeviceTabs } from '@/components/device-tabs';
+import { InstallStatus } from '@/components/install-status';
 import { LocalTime } from '@/components/local-time';
 import { SuggestionList } from '@/components/suggestion-list';
 import { DistributionBar } from '@/components/charts/distribution-bar';
 import { Sparkline } from '@/components/charts/sparkline';
 import { TrendChart } from '@/components/charts/trend-chart';
-import { Card, MetricCell, RatingBadge } from '@/components/ui';
+import { Card, FewViews, MetricCell, RatingBadge } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { CORE_METRICS, METRIC_INFO, METRICS, formatValue, rate, type MetricName } from '@/lib/metrics';
 import {
-  RANGES, getAlerts, getBreakdown, getDiagnostics, getPages, getSummary, getTrends,
+  FEW_VIEWS, RANGES, getAlerts, getBreakdown, getDiagnostics, getPages, getSummary, getTrends,
   type BreakdownRow, type DeviceFilter, type MetricSummary, type RangeKey,
 } from '@/lib/queries';
-import { getSiteForUser } from '@/lib/sites';
+import { getInstallStatus, getSiteForUser } from '@/lib/sites';
 import { getSuggestionProvider } from '@/lib/suggestions';
 
 export const metadata: Metadata = { title: 'Overview' };
@@ -81,8 +82,9 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
 
       {summary.views === 0 ? (
         <Card title="No data for this period yet">
-          <p className="text-sm text-ink-2">
-            Once the script tag is on your site, visits show up here within a minute of each visitor leaving a page.{' '}
+          <InstallStatus status={await getInstallStatus(site.id)} siteId={site.id} domain={site.domain} />
+          <p className="mt-4 text-sm text-ink-2">
+            Once the script tag is on your site, visits show up here a few seconds after each page loads.{' '}
             <Link href={`/dashboard/${site.id}/settings`} className="font-medium text-accent-ink hover:underline">
               Get the script tag
             </Link>
@@ -115,7 +117,7 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
 
           <Card
             title="Slowest pages"
-            subtitle="Ranked by p75 LCP. Pages with fewer than 3 views are hidden."
+            subtitle={`Ranked by p75 LCP. Pages with fewer than ${FEW_VIEWS} views are marked: treat their numbers as early signals.`}
           >
             <div className="-mx-5 overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
@@ -130,7 +132,10 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
                   {pages.map((p) => (
                     <tr key={p.path} className="border-b border-line last:border-0">
                       <td className="max-w-[280px] truncate px-5 py-2.5 font-mono text-xs" title={p.path}>{p.path}</td>
-                      <td className="px-3 py-2.5 text-right text-ink-2 tabular">{p.views.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right text-ink-2 tabular">
+                        {p.views < FEW_VIEWS && <FewViews />}
+                        {p.views.toLocaleString()}
+                      </td>
                       {METRICS.map((m) => <td key={m} className="px-3 py-2.5"><MetricCell metric={m} value={p[m]} /></td>)}
                     </tr>
                   ))}
@@ -176,7 +181,7 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
 
       <Card
         title="Regression alerts"
-        subtitle={`Checked hourly: p75 over the last 24 hours against the 24 hours before. Fires at ${Math.round(site.alert_threshold * 100)}% worse.`}
+        subtitle={`Checked at least once a day: p75 over the last 24 hours against the 24 hours before. Fires at ${Math.round(site.alert_threshold * 100)}% worse.`}
         action={<CheckAlertsButton siteId={site.id} />}
       >
         {alerts.length === 0 ? (

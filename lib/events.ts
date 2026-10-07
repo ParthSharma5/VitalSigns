@@ -25,7 +25,17 @@ export function getWriter(): EventWriter {
   return g.__vitalsignsWriter;
 }
 
-type SiteInfo = { id: string; domain: string } | null;
+// Remembers the origin of a beacon that failed the domain check, at most once a minute per
+// site and origin, so the install page can tell the owner why no data is arriving.
+export async function noteRejectedOrigin(siteId: string, origin: string) {
+  await sql(
+    `UPDATE sites SET rejected_origin = $2, rejected_at = now()
+     WHERE id = $1 AND (rejected_at IS NULL OR rejected_at < now() - interval '1 minute' OR rejected_origin IS DISTINCT FROM $2)`,
+    [siteId, origin.slice(0, 200)],
+  );
+}
+
+type SiteInfo ={ id: string; domain: string } | null;
 const siteCache = new Map<string, { site: SiteInfo; expires: number }>();
 const SITE_TTL_MS = 60_000;
 

@@ -1,5 +1,5 @@
-import { RatingBadge } from '@/components/ui';
-import type { PageDiagnostics } from '@/lib/queries';
+import { FewViews, RatingBadge } from '@/components/ui';
+import { FEW_VIEWS, type PageDiagnostics } from '@/lib/queries';
 import type { Suggestion } from '@/lib/suggestions';
 
 export type PageSuggestions = { page: PageDiagnostics; items: Suggestion[] };
@@ -13,6 +13,7 @@ export function SuggestionList({ suggestions, empty }: { suggestions: PageSugges
           <h3 className="font-mono text-xs font-medium text-ink">
             {page.path}
             <span className="ml-2 font-sans font-normal text-muted">{page.views.toLocaleString()} views</span>
+            {page.views < FEW_VIEWS && <span className="ml-2 font-sans"><FewViews /></span>}
           </h3>
           <ul className="mt-2 space-y-2">
             {items.map((s) => (

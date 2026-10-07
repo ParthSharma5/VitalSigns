@@ -103,6 +103,9 @@ export async function getTrends(f: Filter): Promise<Record<MetricName, TrendPoin
 
 export type PageRow = { path: string; views: number } & Record<MetricName, number | null>;
 
+// Pages with fewer views than this are still listed, but flagged as early signals.
+export const FEW_VIEWS = 3;
+
 export async function getPages(f: Filter, limit = 15): Promise<PageRow[]> {
   const { start, now } = windowOf(f);
   const rows = await sql<{ path: string; views: number } & Record<Lowercase<MetricName>, number | null>>(
@@ -111,7 +114,6 @@ export async function getPages(f: Filter, limit = 15): Promise<PageRow[]> {
      FROM events
      WHERE site_id = $1 AND created_at >= $2 AND created_at < $3 AND ${deviceClause('$4')}
      GROUP BY path
-     HAVING count(DISTINCT view_id) >= 3
      ORDER BY lcp DESC NULLS LAST
      LIMIT $5`,
     [f.siteId, start, now, deviceParam(f), limit],

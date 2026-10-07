@@ -1,5 +1,5 @@
 import { after } from 'next/server';
-import { getWriter, lookupSite } from '@/lib/events';
+import { getWriter, lookupSite, noteRejectedOrigin } from '@/lib/events';
 import { classifyDevice, countryFromHeaders, isBot, originAllowed, parseBeacon, toRows } from '@/lib/ingest';
 
 const CORS = { 'Access-Control-Allow-Origin': '*' };
@@ -14,7 +14,11 @@ export async function POST(request: Request) {
 
   const site = await lookupSite(beacon.s);
   if (!site) return reply(404);
-  if (!originAllowed(request.headers.get('origin'), site.domain)) return reply(403);
+  const origin = request.headers.get('origin');
+  if (!originAllowed(origin, site.domain)) {
+    after(() => noteRejectedOrigin(site.id, origin ?? '').catch((err) => console.error('[collect] note rejected origin failed', err)));
+    return reply(403);
+  }
 
   const rows = toRows(beacon, { device: classifyDevice(ua), country: countryFromHeaders(request.headers) }).map(
     (row) => ({ ...row, siteId: site.id }),

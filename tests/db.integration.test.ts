@@ -3,8 +3,9 @@ import { getAdminOverview } from '../lib/admin';
 import { getSlowestUsers, getVisit, getVisits } from '../lib/visits';
 import { runAlertCheck } from '../lib/alerts';
 import { closeDb, sql } from '../lib/db';
-import { insertEvents } from '../lib/events';
+import { insertEvents, noteRejectedOrigin } from '../lib/events';
 import { getBreakdown, getDiagnostics, getPages, getSummary, getTrends } from '../lib/queries';
+import { getInstallStatus } from '../lib/sites';
 import type { SiteRow } from '../lib/writer';
 
 const NOW = new Date('2026-06-15T12:00:00Z');
@@ -174,5 +175,36 @@ describe('visits', () => {
   it('ranks users by their slowest experience', async () => {
     const users = await getSlowestUsers({ siteId, range: '24h', device: 'all', now: NOW });
     expect(users.map((u) => u.userId)).toEqual(['u_2', 'u_1']);
+  });
+});
+
+describe('fresh installs', () => {
+  let freshId: string;
+  beforeAll(async () => {
+    const [user] = await sql<{ id: string }>(`SELECT user_id AS id FROM sites WHERE id = $1`, [siteId]);
+    const [site] = await sql<{ id: string }>(
+      `INSERT INTO sites (user_id, name, domain, public_key) VALUES ($1, 'Fresh', 'fresh.dev', 'vs_fresh') RETURNING id`,
+      [user.id],
+    );
+    freshId = site.id;
+  });
+
+  it('reports waiting, then a rejected origin, then receiving data', async () => {
+    expect(await getInstallStatus(freshId)).toEqual({ lastEventAt: null, lastPath: null, rejectedOrigin: null, rejectedAt: null });
+
+    await noteRejectedOrigin(freshId, 'https://fresh.vercel.app');
+    const rejected = await getInstallStatus(freshId);
+    expect(rejected.rejectedOrigin).toBe('https://fresh.vercel.app');
+    expect(rejected.rejectedAt).toBeInstanceOf(Date);
+
+    await insertEvents([event({ siteId: freshId, metricId: 'f1', viewId: 'fv1', path: '/pricing' })]);
+    const live = await getInstallStatus(freshId);
+    expect(live.lastPath).toBe('/pricing');
+    expect(live.lastEventAt!.getTime()).toBeGreaterThanOrEqual(rejected.rejectedAt!.getTime());
+  });
+
+  it('lists pages from the very first view', async () => {
+    const pages = await getPages({ siteId: freshId, range: '24h', device: 'all' });
+    expect(pages).toEqual([expect.objectContaining({ path: '/pricing', views: 1, LCP: 1000 })]);
   });
 });

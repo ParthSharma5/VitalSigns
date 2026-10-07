@@ -1,28 +1,41 @@
 import type { Metadata } from 'next';
 import { CopySnippet } from '@/components/copy-snippet';
+import { InstallStatus } from '@/components/install-status';
 import { DeleteSiteForm, SiteSettingsForm } from '@/components/site-settings-form';
 import { Card } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { appOrigin } from '@/lib/origin';
-import { getSiteForUser } from '@/lib/sites';
+import { getInstallStatus, getSiteForUser } from '@/lib/sites';
 
 export const metadata: Metadata = { title: 'Install & settings' };
 
 export default async function SettingsPage(props: PageProps<'/dashboard/[siteId]/settings'>) {
   const [{ siteId }, sp, user] = await Promise.all([props.params, props.searchParams, requireUser()]);
   const site = await getSiteForUser(siteId, user.id);
-  const origin = await appOrigin();
+  const [origin, status] = await Promise.all([appOrigin(), getInstallStatus(site.id)]);
   const snippet = `<script defer src="${origin}/v1.js" data-site="${site.public_key}"></script>`;
+  const localOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:|$)/.test(origin);
 
   return (
     <div className="space-y-6">
       {sp.new && (
         <p className="rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-ink">
-          Site created. Add the script tag below and data will start arriving with your next visitor.
+          Site created. Add the script tag below, deploy, and open your site: the status updates here by itself.
         </p>
       )}
 
+      <Card title="Status">
+        <InstallStatus status={status} siteId={site.id} domain={site.domain} />
+      </Card>
+
       <Card title="Install" subtitle="Paste into the <head> of every page, or your layout / template.">
+        {localOrigin && (
+          <p className="mb-3 rounded-lg border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-ink">
+            This tag points at <code className="font-mono text-xs">{origin}</code>, which only works on this computer. For a
+            live site, open this dashboard from its deployed URL, or set <code className="font-mono text-xs">APP_URL</code>{' '}
+            to it.
+          </p>
+        )}
         <CopySnippet code={snippet} />
         <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -49,8 +62,8 @@ export default async function SettingsPage(props: PageProps<'/dashboard/[siteId]
           <div>
             <dt className="font-medium">What it costs your page</dt>
             <dd className="mt-1 text-ink-2">
-              A ~250 B loader, then a ~4 KB collector fetched async at low priority. One beacon per page view, sent when the visitor
-              leaves.
+              A ~250 B loader, then a ~4.5 KB collector fetched async at low priority. A few tiny beacons per page view: a few
+              seconds after load and when the visitor leaves. Client-side (SPA) route changes count as page views.
             </dd>
           </div>
         </dl>

@@ -32,10 +32,10 @@ visitor's browser                        VitalSigns (Next.js)                   
 ──────────────────                       ────────────────────                       ────────
 v1.js loader (252 B gz)
   └─ injects v1-core.<hash>.js
-     (web-vitals + batching, 4 KB gz,
+     (web-vitals + batching, 4.4 KB gz,
       async, fetchpriority=low)
-        │ one beacon per page view,
-        │ sent when the page is hidden
+        │ beacons ~5 s after measuring,
+        │ on route change and on hide
         ▼
 POST /api/collect  ──validate, drop bots, origin check──▶ EventWriter ──group commit──▶ events
                                                           (batches rows from many         (upsert on
@@ -48,8 +48,9 @@ cron (hourly) ── /api/cron/alerts ── compare last 24h vs the 24h before 
 ### The snippet (`snippet/`)
 
 - **The pasted tag is 252 bytes gzipped.** It only injects the collector, an async script at low fetch priority, so it never competes with the host page's critical requests.
-- **The collector** is Google's [web-vitals](https://github.com/GoogleChrome/web-vitals) library plus about 1 KB of batching and attribution code, 4 KB gzipped. Its filename is content-hashed and served `immutable`, while the loader has a one-hour cache, so new collector versions roll out within an hour without cache-busting anyone's HTML.
-- **One beacon per page view**, sent with `sendBeacon` on `visibilitychange`/`pagehide` as `text/plain`, so there's no CORS preflight. Metrics are queued by id, so a growing CLS or INP value replaces the earlier report.
+- **The collector** is Google's [web-vitals](https://github.com/GoogleChrome/web-vitals) library plus about 1.5 KB of batching, routing and attribution code, 4.4 KB gzipped. Its filename is content-hashed and served `immutable`, while the loader has a one-hour cache, so new collector versions roll out within an hour without cache-busting anyone's HTML.
+- **Data arrives within seconds.** Metrics are sent with `sendBeacon` as `text/plain` (no CORS preflight) about 5 seconds after they are measured, again on `visibilitychange`/`pagehide`, so a fresh install shows data almost immediately. Metrics are queued by id and the server upserts on it, so a growing LCP, CLS or INP value replaces the earlier report instead of double counting.
+- **Single-page apps are measured per route.** `pushState`, `replaceState` and `popstate` path changes start a new page view under the new path. LCP and TTFB belong to the initial load; layout shifts and slow interactions are credited to the route they happened on. A route only gets its own INP when it had the page's slowest interaction so far.
 - **Lightweight attribution**: the LCP element and resource URL, the INP event type and target, and the element behind the largest layout shift. This is what powers the fix suggestions.
 - `npm run build:snippet` fails the build if the loader goes over 2 KB or the collector over 5 KB gzipped.
 

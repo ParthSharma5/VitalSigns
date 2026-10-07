@@ -71,6 +71,17 @@ export function RatingBadge({ rating, compact = false }: { rating: Rating; compa
   );
 }
 
+export function FewViews() {
+  return (
+    <span
+      className="mr-2 rounded bg-warn/15 px-1.5 py-0.5 text-[10px] font-medium text-warn-ink"
+      title="Only a few views so far: these numbers will settle as more visitors arrive."
+    >
+      few visits
+    </span>
+  );
+}
+
 export function MetricCell({ metric, value }: { metric: MetricName; value: number | null }) {
   if (value == null) return <span className="text-muted">–</span>;
   return (
