@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DEVICES, DEVICE_LABEL, FilterGroup, RANGE_LABEL, countryName } from '@/components/filters';
+import { LocalTime } from '@/components/local-time';
 import { Card, MetricCell } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { RANGES, type DeviceFilter, type RangeKey } from '@/lib/queries';
@@ -8,9 +9,6 @@ import { getSiteForUser } from '@/lib/sites';
 import { getSlowestUsers, getVisits } from '@/lib/visits';
 
 export const metadata: Metadata = { title: 'Visits' };
-
-const fmtTime = (d: Date) =>
-  d.toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 export default async function VisitsPage(props: PageProps<'/dashboard/[siteId]/visits'>) {
   const [{ siteId }, sp, user] = await Promise.all([props.params, props.searchParams, requireUser()]);
@@ -97,7 +95,7 @@ export default async function VisitsPage(props: PageProps<'/dashboard/[siteId]/v
                     <td className="px-3 py-2.5"><MetricCell metric="LCP" value={u.LCP} /></td>
                     <td className="px-3 py-2.5"><MetricCell metric="INP" value={u.INP} /></td>
                     <td className="px-3 py-2.5"><MetricCell metric="CLS" value={u.CLS} /></td>
-                    <td className="px-5 py-2.5 text-ink-2">{fmtTime(u.lastSeen)}</td>
+                    <td className="px-5 py-2.5 text-ink-2"><LocalTime value={u.lastSeen.toISOString()} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -133,7 +131,7 @@ export default async function VisitsPage(props: PageProps<'/dashboard/[siteId]/v
               <tbody>
                 {visits.map((v) => (
                   <tr key={v.viewId} className="border-b border-line last:border-0 hover:bg-surface-2/60">
-                    <td className="whitespace-nowrap px-5 py-2.5 text-ink-2 tabular">{fmtTime(v.at)}</td>
+                    <td className="whitespace-nowrap px-5 py-2.5 text-ink-2 tabular"><LocalTime value={v.at.toISOString()} /></td>
                     <td className="max-w-[220px] truncate px-3 py-2.5 font-mono text-xs" title={v.path}>{v.path}</td>
                     <td className="px-3 py-2.5 capitalize text-ink-2">{v.device}</td>
                     <td className="px-3 py-2.5 text-ink-2">{countryName(v.country)}</td>

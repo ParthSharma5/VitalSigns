@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CheckAlertsButton } from '@/components/check-alerts-button';
 import { DEVICES, DEVICE_LABEL, FilterGroup, RANGE_LABEL, countryName } from '@/components/filters';
+import { LocalTime } from '@/components/local-time';
 import { DistributionBar } from '@/components/charts/distribution-bar';
 import { Sparkline } from '@/components/charts/sparkline';
 import { TrendChart } from '@/components/charts/trend-chart';
@@ -183,9 +184,7 @@ export default async function SiteOverview(props: PageProps<'/dashboard/[siteId]
                     </span>
                   </span>
                 </span>
-                <time className="text-xs text-muted" dateTime={new Date(a.created_at).toISOString()}>
-                  {new Date(a.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                </time>
+                <LocalTime value={new Date(a.created_at).toISOString()} className="text-xs text-muted" />
               </li>
             ))}
           </ul>

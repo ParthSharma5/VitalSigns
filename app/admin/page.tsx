@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
 import { AppHeader } from '@/components/site-header';
+import { LocalTime } from '@/components/local-time';
 import { Card } from '@/components/ui';
 import { getAdminOverview, requireAdmin } from '@/lib/admin';
 
 export const metadata: Metadata = { title: 'Admin', robots: { index: false, follow: false } };
-
-const fmtDate = (d: Date | string | null) =>
-  d ? new Date(d).toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' }) : '–';
 
 function timeAgo(d: Date | string | null): string {
   if (!d) return 'Never';
@@ -62,7 +60,7 @@ export default async function AdminPage() {
                 {users.map((u) => (
                   <tr key={u.id} className="border-b border-line last:border-0">
                     <td className="px-5 py-2.5">{u.email}</td>
-                    <td className="px-3 py-2.5 text-ink-2">{fmtDate(u.created_at)}</td>
+                    <td className="px-3 py-2.5 text-ink-2"><LocalTime value={new Date(u.created_at).toISOString()} format="date" /></td>
                     <td className="px-3 py-2.5 text-right tabular">{u.sites}</td>
                     <td className="px-3 py-2.5 text-right tabular">{u.events_7d.toLocaleString()}</td>
                     <td className="px-5 py-2.5 text-ink-2">{timeAgo(u.last_seen)}</td>
@@ -96,7 +94,7 @@ export default async function AdminPage() {
                       <div className="text-xs text-muted">{s.domain}</div>
                     </td>
                     <td className="px-3 py-2.5 text-ink-2">{s.owner}</td>
-                    <td className="px-3 py-2.5 text-ink-2">{fmtDate(s.created_at)}</td>
+                    <td className="px-3 py-2.5 text-ink-2"><LocalTime value={new Date(s.created_at).toISOString()} format="date" /></td>
                     <td className="px-3 py-2.5 text-right tabular">{s.views_7d.toLocaleString()}</td>
                     <td className="px-3 py-2.5 text-right tabular">{s.events_24h.toLocaleString()}</td>
                     <td className="px-3 py-2.5 text-right tabular">{s.events.toLocaleString()}</td>

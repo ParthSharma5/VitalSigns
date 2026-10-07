@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { countryName } from '@/components/filters';
+import { LocalTime } from '@/components/local-time';
 import { Card, RatingBadge } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { METRIC_INFO, formatValue, rate } from '@/lib/metrics';
@@ -17,7 +18,7 @@ export default async function VisitPage(props: PageProps<'/dashboard/[siteId]/vi
   if (!visit) notFound();
 
   const context = [
-    { label: 'Time', value: visit.at.toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' }) },
+    { label: 'Time', value: <LocalTime value={visit.at.toISOString()} format="full" /> },
     { label: 'Page', value: visit.path, mono: true },
     { label: 'Device', value: visit.device[0].toUpperCase() + visit.device.slice(1) },
     { label: 'Country', value: countryName(visit.country) },
