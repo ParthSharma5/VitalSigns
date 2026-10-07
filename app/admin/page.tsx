@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { Card, Logo } from '@/components/ui';
+import { AppHeader } from '@/components/site-header';
+import { Card } from '@/components/ui';
 import { getAdminOverview, requireAdmin } from '@/lib/admin';
 
 export const metadata: Metadata = { title: 'Admin', robots: { index: false, follow: false } };
@@ -32,18 +32,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Logo />
-            <span className="rounded-md bg-poor/15 px-2 py-0.5 text-xs font-semibold text-poor-ink">Admin</span>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="hidden text-muted sm:inline">{admin.email}</span>
-            <Link href="/dashboard" className="text-ink-2 hover:text-ink">My dashboard</Link>
-          </div>
-        </div>
-      </header>
+      <AppHeader user={admin} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-8">
         <h1 className="text-2xl font-semibold tracking-tight">Admin</h1>

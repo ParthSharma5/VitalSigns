@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { Logo } from '@/components/ui';
+import { MarketingHeader } from '@/components/site-header';
+import { LogoMark } from '@/components/ui';
+import { getUser } from '@/lib/auth';
 import { appOrigin } from '@/lib/origin';
 
 const FEATURES = [
@@ -13,7 +15,7 @@ const FEATURES = [
   },
   {
     title: 'Know when a deploy hurts',
-    body: 'Hourly regression checks compare today with yesterday and alert you by email or Slack: “LCP got 40% worse since release v2.3.”',
+    body: 'Regression checks compare today with yesterday and alert you by email or Slack: “LCP got 40% worse since release v2.3.”',
   },
   {
     title: 'Fixes, not just numbers',
@@ -21,21 +23,19 @@ const FEATURES = [
   },
 ];
 
+const STEPS = [
+  { title: 'Add your site', body: 'Sign up and enter your domain. You get a site key straight away.' },
+  { title: 'Paste one script tag', body: 'Put it in the <head> of your layout. It is 250 bytes and never blocks rendering.' },
+  { title: 'Watch real data arrive', body: 'Scores show up as visitors leave each page: by page, device and country.' },
+];
+
 export default async function Home() {
-  const origin = await appOrigin();
+  const [origin, user] = await Promise.all([appOrigin(), getUser()]);
   return (
     <div className="flex flex-1 flex-col">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
-        <Logo />
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/login" className="text-ink-2 hover:text-ink">Log in</Link>
-          <Link href="/signup" className="rounded-lg bg-accent px-3 py-1.5 font-medium text-white hover:opacity-90">
-            Sign up free
-          </Link>
-        </nav>
-      </header>
+      <MarketingHeader user={user} />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4">
         <section className="py-16 sm:py-24">
           <h1 className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
             See how fast your site really is for the people using it.
@@ -45,12 +45,15 @@ export default async function Home() {
             and tells you when a deploy makes things worse.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/signup" className="rounded-lg bg-accent px-5 py-2.5 font-medium text-white hover:opacity-90">
-              Get your script tag
+            <Link
+              href={user ? '/dashboard' : '/signup'}
+              className="rounded-lg bg-accent px-5 py-2.5 font-medium text-white hover:opacity-90"
+            >
+              {user ? 'Open your dashboard' : 'Get your script tag'}
             </Link>
-            <Link href="/login" className="rounded-lg border border-line bg-surface px-5 py-2.5 font-medium hover:bg-surface-2">
-              Log in
-            </Link>
+            <a href="#how-it-works" className="rounded-lg border border-line bg-surface px-5 py-2.5 font-medium hover:bg-surface-2">
+              How it works
+            </a>
           </div>
 
           <div className="mt-12 max-w-2xl overflow-x-auto rounded-xl border border-line bg-surface p-4">
@@ -65,18 +68,42 @@ export default async function Home() {
           </p>
         </section>
 
-        <section className="grid gap-4 pb-24 sm:grid-cols-2">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-xl border border-line bg-surface p-5">
-              <h2 className="font-semibold">{f.title}</h2>
-              <p className="mt-2 text-sm text-ink-2">{f.body}</p>
-            </div>
-          ))}
+        <section id="features" className="scroll-mt-20 pb-20">
+          <h2 className="mb-6 text-2xl font-semibold tracking-tight">Features</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="rounded-xl border border-line bg-surface p-5">
+                <h3 className="font-semibold">{f.title}</h3>
+                <p className="mt-2 text-sm text-ink-2">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="how-it-works" className="scroll-mt-20 pb-24">
+          <h2 className="mb-6 text-2xl font-semibold tracking-tight">How it works</h2>
+          <ol className="grid gap-4 sm:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <li key={s.title} className="rounded-xl border border-line bg-surface p-5">
+                <span className="flex size-7 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent-ink">
+                  {i + 1}
+                </span>
+                <h3 className="mt-3 font-semibold">{s.title}</h3>
+                <p className="mt-2 text-sm text-ink-2">{s.body}</p>
+              </li>
+            ))}
+          </ol>
         </section>
       </main>
 
-      <footer className="border-t border-line py-6 text-center text-xs text-muted">
-        VitalSigns: real-user monitoring for Core Web Vitals.
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-muted">
+          <span className="inline-flex items-center gap-2">
+            <LogoMark size={16} />
+            VitalSigns: real-user monitoring for Core Web Vitals.
+          </span>
+          <span>© {new Date().getFullYear()} VitalSigns</span>
+        </div>
       </footer>
     </div>
   );

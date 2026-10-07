@@ -2,20 +2,30 @@ import Link from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
 import { RATING_LABEL, formatValue, rate, type MetricName, type Rating } from '@/lib/metrics';
 
-export function Logo({ className = '' }: { className?: string }) {
+export function LogoMark({ size = 24 }: { size?: number }) {
   return (
-    <Link href="/" className={`inline-flex items-center gap-2 font-semibold tracking-tight text-ink ${className}`}>
-      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-        <rect width="24" height="24" rx="6" fill="var(--accent)" />
-        <path
-          d="M4 13h3.5l2-5 3.5 9 2.5-6 1.5 2H20"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" className="shrink-0">
+      <rect width="32" height="32" rx="8" fill="var(--accent)" />
+      <path
+        d="M5 17.5h4.5l2.8-7 4.6 12 3.3-8 2 2.6H27"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function Logo({ className = '', href = '/' }: { className?: string; href?: string }) {
+  return (
+    <Link
+      href={href}
+      aria-label="VitalSigns home"
+      className={`inline-flex items-center gap-2 font-semibold tracking-tight text-ink ${className}`}
+    >
+      <LogoMark />
       VitalSigns
     </Link>
   );

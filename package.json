@@ -12,7 +12,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
+    "build:icons": "tsx scripts/build-icons.mts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
